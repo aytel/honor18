@@ -45,7 +45,7 @@ def find_ECG_peaks(vec):
     return [[i, vec[i]] for i in out[2]]
 
 
-def find_PPG_peaks(vec):
+def find_PPG_peaks_old(vec):
     mids = find_ECG_peaks(vec)
     mids = [i[0] for i in mids]
     #print(mids, file=sys.stderr)
@@ -67,6 +67,23 @@ def find_PPG_peaks(vec):
         up.append([mx, vec[mx]])
     return ret, up
 
+"""
+def find_PPG_peaks(vec):
+    av = find_diff(find_ECG_peaks(vec))
+    tr, tru = find_PPG_peaks_old(vec)
+    ret = []
+    up = []
+
+    for i in range(min(3, len(tr))):
+        ch = [tr[0]]
+        for j in range(len(tr)):
+            if av / (tr[j][0] - ret[len(ret) - 1][0]) > 1.5
+
+        vec = vec[1:]
+
+    return ret, up
+"""
+
 
 def parse(file):
     cur = reader(file)
@@ -80,7 +97,7 @@ def parse(file):
 
     # find peaks
     try:
-        temp = find_PPG_peaks(PPG)
+        temp = find_PPG_peaks_old(PPG)
         PPG_peaks = temp[0]
         PPG_peaks_up = temp[1]
     except:
@@ -100,22 +117,30 @@ def parse(file):
     PPG_diff = find_diff([i[1] for i in PPG_peaks])
 
     # find average delay
-    while len(PPG_peaks_up) > 1 and PPG_peaks_up[0][0] < ECG_peaks[0][0]:
-        PPG_peaks_up = PPG_peaks_up[1:]
-    while len(ECG_peaks) > 1 and ECG_peaks[1][0] < PPG_peaks_up[0][0]:
-        ECG_peaks = ECG_peaks[1:]
-
     merge = []
-    for i in range(min(len(PPG_peaks_up), len(ECG_peaks))):
-        merge.append(ECG_peaks[i])
-        merge.append(PPG_peaks_up[i])
+    p1, p2 = 0, 0
+    while p1 < len(PPG_peaks_up) and p2 < len(ECG_peaks):
+        while p1 < len(PPG_peaks_up) and PPG_peaks_up[p1][0] < ECG_peaks[p2][0]:
+            p1 += 1
+        if p1 == len(PPG_peaks_up):
+            break
+        while p2 < len(ECG_peaks) - 1 and PPG_peaks_up[p1][0] > ECG_peaks[p2 + 1][0]:
+            p2 += 1
+        if p2 == len(ECG_peaks):
+            break
+        if p1 < len(PPG_peaks_up) and p2 < len(ECG_peaks):
+            merge.append(ECG_peaks[p2])
+            p2 += 1
+            merge.append(PPG_peaks_up[p1])
+            p1 += 1
     merge_diff = find_diff([merge[i][0] for i in range(len(merge))])
 
     if merge_diff > 400:
-        pass
+        DEBUG = 1
 
     # ret
     return [SBP, DBP, PPG_diff, merge_diff]
+    #return [SBP, DBP, PPG_diff]
 
 
 if __name__ == '__main__':
