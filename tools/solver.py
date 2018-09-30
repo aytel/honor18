@@ -53,7 +53,7 @@ def find_diff(peaks):
 def find_PPG_peaks(vec):
     cur = np.array(vec)
     octave.eval("pkg load signal")
-    (peaks, indexes) = octave.findpeaks(cur, 'DoubleSided', 'MinPeakHeight', 1000, 'MinPeakDistance', 150, 'MinPeakWidth', 0, nout = 2)      
+    (peaks, indexes) = octave.findpeaks(cur, 'DoubleSided', 'MinPeakHeight', 1000, 'MinPeakDistance', 50, 'MinPeakWidth', 0, nout = 2)      
     return [int(x) for x in indexes[0]]
 
 if __name__ == '__main__':
